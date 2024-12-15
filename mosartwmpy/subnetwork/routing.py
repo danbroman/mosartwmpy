@@ -44,21 +44,52 @@ def subnetwork_routing(
     subnetwork_hydraulic_radii,
     tiny_value,
 ):
-    """Tracks the storage and flow of water in the subnetwork river channels."""
+    """
+    Tracks the storage and flow of water in the subnetwork river channels.
+
+    Parameters:
+    n (int64): Number of subnetwork segments.
+    delta_t (float64): Time step for the simulation.
+    routing_iterations (int64): Number of routing iterations.
+    max_iterations_subnetwork (int64): Maximum number of iterations for the subnetwork.
+    iterations_subnetwork (int64[:]): Array of iterations for each subnetwork segment.
+    mosart_mask (int64[:]): Mask indicating active subnetwork segments.
+    subnetwork_slope (float64[:]): Slope of each subnetwork segment.
+    subnetwork_manning (float64[:]): Manning's roughness coefficient for each subnetwork segment.
+    subnetwork_length (float64[:]): Length of each subnetwork segment.
+    subnetwork_width (float64[:]): Width of each subnetwork segment.
+    hillslope_length (float64[:]): Length of the hillslope for each subnetwork segment.
+    euler_mask (boolean[:]): Mask indicating segments using Euler's method.
+    channel_lateral_flow_hillslope (float64[:]): Lateral flow from the hillslope to the channel.
+    subnetwork_flow_velocity (float64[:]): Flow velocity in each subnetwork segment.
+    subnetwork_discharge (float64[:]): Discharge in each subnetwork segment.
+    subnetwork_lateral_inflow (float64[:]): Lateral inflow into each subnetwork segment.
+    subnetwork_storage (float64[:]): Storage in each subnetwork segment.
+    subnetwork_storage_previous_timestep (float64[:]): Storage in each subnetwork segment from the previous timestep.
+    subnetwork_delta_storage (float64[:]): Change in storage for each subnetwork segment.
+    subnetwork_depth (float64[:]): Depth of water in each subnetwork segment.
+    subnetwork_cross_section_area (float64[:]): Cross-sectional area of each subnetwork segment.
+    subnetwork_wetness_perimeter (float64[:]): Wetness perimeter of each subnetwork segment.
+    subnetwork_hydraulic_radii (float64[:]): Hydraulic radii of each subnetwork segment.
+    tiny_value (float64): A small value to avoid division by zero.
+
+    Returns:
+    None
+    """
 
     for i in nb.prange(n):
 
         local_delta_t = (delta_t / routing_iterations) / iterations_subnetwork[i]
         channel_lateral_flow_hillslope[i] = 0.0
 
-        if ~euler_mask[i] or ~(mosart_mask[i] > 0):
+        if not euler_mask[i] or not (mosart_mask[i] > 0):
             continue
 
         has_tributaries = subnetwork_length[i] > hillslope_length[i]
 
         # step through max iterations
         for _ in nb.prange(max_iterations_subnetwork):
-            if ~(iterations_subnetwork[i] > _):
+            if not (iterations_subnetwork[i] > _):
                 continue
 
             if has_tributaries:
@@ -66,8 +97,6 @@ def subnetwork_routing(
                     subnetwork_flow_velocity[i] = (subnetwork_hydraulic_radii[i] ** (2.0/3.0)) * (subnetwork_slope[i] ** (1.0/2.0)) / subnetwork_manning[i]
                 else:
                     subnetwork_flow_velocity[i] = 0.0
-
-            if has_tributaries:
                 subnetwork_discharge[i] = -subnetwork_flow_velocity[i] * subnetwork_cross_section_area[i]
             else:
                 subnetwork_discharge[i] = -1.0 * subnetwork_lateral_inflow[i]

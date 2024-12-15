@@ -82,7 +82,7 @@ class Grid:
     reservoir_use_fish_protection: np.ndarray = np.empty(0)
     reservoir_grand_meanflow_cumecs: np.ndarray = np.empty(0)
     reservoir_observed_meanflow_cumecs: np.ndarray = np.empty(0)
-    reservoir_computed_meanflow_cumecs = np.empty(0)
+    reservoir_computed_meanflow_cumecs: np.ndarray = np.empty(0)
     reservoir_upper_alpha: np.ndarray = np.empty(0)
     reservoir_upper_beta: np.ndarray = np.empty(0)
     reservoir_upper_max: np.ndarray = np.empty(0)
@@ -118,7 +118,9 @@ class Grid:
             config (Benedict): the model configuration
             parameters (Parameters): the model parameters
             empty (bool): if true will return an empty instance
-        """
+        ```python
+                    Note: `config` and `parameters` are required if `empty` is `False`.
+                """
 
         # shortcut to get an empty grid instance
         if empty:
@@ -271,7 +273,7 @@ class Grid:
             land = open_dataset(config.get('grid.land.path'))
             self.land_fraction = np.array(land[config.get('grid.land.land_fraction')]).flatten()
             land.close()
-        except:
+        except Exception:
             self.land_fraction = np.full(self.id.size, 1.0)
 
         # parameter for calculating number of main channel iterations needed
@@ -452,12 +454,10 @@ class Grid:
                 for i, filename in enumerate(paths):
                     zip.write(filename, names[i])
 
-    @staticmethod
-    def from_files(path: Path) -> 'Grid':
         """Creates a Grid instance from columns in a dataframe.
 
         Args:
-            path (str): the file path to the zip file to load the grid from
+            path (Union[str, Path]): the file path to the zip file to load the grid from
 
         Returns:
             Grid: a Grid instance populated with the columns from the dataframe
@@ -471,7 +471,7 @@ class Grid:
             for filename in zip.namelist():
                 with zip.open(filename) as file:
                     if filename.endswith('.pickle'):
-                        from_pickle = pickle.load(file)
+                        from_pickle = pickle.load(file, fix_imports=False)
                         for key in from_pickle.keys():
                             setattr(grid, key, from_pickle[key])
                     if filename.endswith('np.feather'):
@@ -486,8 +486,8 @@ class Grid:
                         ds.close()
                     if filename.endswith('xr.nc'):
                         key = filename.split('.')[0]
-                        ds = xr.open_dataarray(file, engine='h5netcdf').load()
-                        setattr(grid, key, ds)
+                        ds = xr.open_dataarray(file, engine='h5netcdf')
+                        setattr(grid, key, ds.load())
                         ds.close()
 
         # recreate the numba grid to reservoir map
@@ -505,16 +505,18 @@ class Grid:
             lon2: float
     ) -> Union[float, np.ndarray]:
         """Calculates the haversine distance between points
+        Args:
+            lat1 (float|ArrayLike[float]): latitude of the origin point or array of points
+            lon1 (float|ArrayLike[float]): longitude of the origin point or array of points
+            lat2 (float): latitude of the point in question
+            lon2 (float): longitude of the point in question
 
-                Args:
-                    lat1 (float|ArrayLike[float]): latitude of the origin point or array of points
-                    lon1 (float|ArrayLike[float]): longitude of the origin point or array of points
-                    lat2 (float): latitude of the point in question
-                    lon2 (float): longitude of the point in question
+        Returns:
+            float or array of floats of the haversine distance between points in kilometers
+        """
 
-                Returns:
-                    float or array of floats of the haversine distance between points
-                """
-        p = 0.017453292519943295
-        hav = 0.5 - np.cos((lat2 - lat1) * p) / 2 + np.cos(lat1 * p) * np.cos(lat2 * p) * (1 - np.cos((lon2 - lon1) * p)) / 2
+        cos_lat2 = np.cos(lat2 * p)
+        delta_lat = (lat2 - lat1) * p
+        delta_lon = (lon2 - lon1) * p
+        hav = 0.5 - np.cos(delta_lat) / 2 + cos_lat1 * cos_lat2 * (1 - np.cos(delta_lon)) / 2
         return 12742 * np.arcsin(np.sqrt(hav))

@@ -14,7 +14,7 @@ def istarf_release(state: State, grid: Grid, config: Benedict, parameters: Param
     # estimate reservoir release using ISTARF which is based on harmonic functions
 
     # restrict epiweek to [1, 52]
-    epiweek = np.minimum(float(get_epiweek_from_datetime(current_time)), 52.0)
+    epiweek = min(float(get_epiweek_from_datetime(current_time)), 52.0)
 
     daily_release = np.zeros(len(grid.reservoir_id))
 

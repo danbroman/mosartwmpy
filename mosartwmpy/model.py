@@ -130,9 +130,9 @@ class Model(Bmi):
                     else:
                         logging.warning('Unable to parse date from restart file name, falling back to configured start date.')
                         self.current_time = datetime.combine(self.config.get('simulation.start_date'), time.min)
-                    x = xr.open_dataset(path)
-                    self.state = State.from_dataframe(x.to_dataframe())
-                    x.close()
+                    ds = xr.open_dataset(path)
+                    self.state = State.from_dataframe(ds.to_dataframe())
+                    ds.close()
                 else:
                     # simulation start time
                     self.current_time = datetime.combine(self.config.get('simulation.start_date'), time.min)

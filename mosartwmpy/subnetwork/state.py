@@ -11,7 +11,7 @@ import numba as nb
     cache=True,
 )
 def update_subnetwork_state(
-    i,
+    i,  # Index of the subnetwork element to update
     subnetwork_length,
     subnetwork_width,
     subnetwork_storage,
@@ -21,7 +21,20 @@ def update_subnetwork_state(
     subnetwork_hydraulic_radii,
     tiny_value,
 ):
-    """Updates the physical properties of the subnetwork river channels based on current state."""
+    """
+    Updates the physical properties of the subnetwork river channels based on current state.
+
+    Parameters:
+    i (int64): Index of the subnetwork.
+    subnetwork_length (float64[:]): Length of the subnetwork river channels.
+    subnetwork_width (float64[:]): Width of the subnetwork river channels.
+    subnetwork_storage (float64[:]): Storage of the subnetwork river channels.
+    subnetwork_cross_section_area (float64[:]): Cross-sectional area of the subnetwork river channels.
+    subnetwork_depth (float64[:]): Depth of the subnetwork river channels.
+    subnetwork_wetness_perimeter (float64[:]): Wetness perimeter of the subnetwork river channels.
+    subnetwork_hydraulic_radii (float64[:]): Hydraulic radii of the subnetwork river channels.
+    tiny_value (float64): A small value used to avoid division by zero.
+    """
 
     has_water = (subnetwork_length[i] > 0.0) and (subnetwork_storage[i] > 0.0)
 

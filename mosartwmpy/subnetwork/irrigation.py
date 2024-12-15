@@ -30,7 +30,39 @@ def subnetwork_irrigation(
     irrigation_extraction_parameter,
     tiny_value,
 ):
-    """Tracks the supply of water from the subnetwork river channels extracted into the grid cells."""
+    """
+    Tracks the supply of water from the subnetwork river channels extracted into the grid cells.
+
+    Parameters:
+    n : int
+        Number of elements in the subnetwork.
+    mosart_mask : int64[:]
+        Mask indicating active subnetwork elements.
+    subnetwork_length : float64[:]
+        Length of each subnetwork element.
+    subnetwork_width : float64[:]
+        Width of each subnetwork element.
+    euler_mask : boolean[:]
+        Mask indicating elements to be processed.
+    subnetwork_depth : float64[:]
+        Depth of each subnetwork element.
+    subnetwork_storage : float64[:]
+        Storage volume of each subnetwork element.
+    grid_cell_unmet_demand : float64[:]
+        Unmet water demand for each grid cell.
+    grid_cell_supply : float64[:]
+        Water supply for each grid cell.
+    subnetwork_cross_section_area : float64[:]
+        Cross-sectional area of each subnetwork element.
+    subnetwork_wetness_perimeter : float64[:]
+        Wetness perimeter of each subnetwork element.
+    subnetwork_hydraulic_radii : float64[:]
+        Hydraulic radii of each subnetwork element.
+    irrigation_extraction_parameter : float64
+        Parameter for irrigation extraction.
+    tiny_value : float64
+        Small value to avoid division by zero.
+    """
 
     for i in nb.prange(n):
 

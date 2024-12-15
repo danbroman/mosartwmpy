@@ -14,6 +14,7 @@ from numba.typed import List, Dict
     nopython=True,
     nogil=True,
     cache=True,
+    parallel=True,
 )
 def regulation(
     n,

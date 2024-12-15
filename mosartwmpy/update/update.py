@@ -25,6 +25,7 @@ def update(state: State, grid: Grid, parameters: Parameters, config: Benedict, c
         grid (Grid): the model grid
         parameters (Parameters): the model parameters
         config (Benedict): the model configuration
+        current_time (datetime): the current simulation time
     """
 
     # size of flattened grid
