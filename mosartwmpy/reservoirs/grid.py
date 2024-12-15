@@ -37,6 +37,8 @@ def load_reservoirs(self, config: Benedict, parameters: Parameters) -> None:
     self.reservoir_surface_area = self.reservoir_surface_area * 1.0e6
     # capacity from millions m^3 to m^3
     self.reservoir_storage_capacity = self.reservoir_storage_capacity * 1.0e6
+    # min capacity from millions m^3 to m^3
+    self.reservoir_storage_minimum = self.reservoir_storage_minimum * 1.0e6
 
     # reservoir dependency database file
     self.reservoir_dependency_database = pd.read_parquet(

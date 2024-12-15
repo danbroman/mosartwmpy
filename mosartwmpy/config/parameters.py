@@ -42,7 +42,7 @@ class Parameters:
         self.reservoir_flood_control_condition = 1.0
         self.reservoir_small_magnitude_difference = 0.01
         self.reservoir_regulation_release_parameter = 0.85
-        self.reservoir_runoff_capacity_parameter = 0.1
+        self.reservoir_runoff_capacity_parameter = 0.1 # fraction of capacity to set minimum storage
         self.reservoir_flow_volume_ratio = 0.9
         
         # number of supply iterations

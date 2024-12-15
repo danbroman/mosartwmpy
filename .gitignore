@@ -146,3 +146,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+mosartwmpy/grand_average_monthly_demand_20230404.parquet
+mosartwmpy/grand_average_monthly_flow_20230404.parquet
+mosartwmpy/grand_dependency_database_20230404.parquet
+mosartwmpy/grand_reservoir_parameters_20230404.nc
+mosartwmpy/input/domains/land.nc
+mosartwmpy/input/domains/mosart.nc
+mosartwmpy/input/domains/mosart_conus_nldas_grid.nc
+environment.yml
+Untitled.ipynb

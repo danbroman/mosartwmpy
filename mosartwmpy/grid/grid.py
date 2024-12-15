@@ -22,7 +22,7 @@ np.seterr(all='ignore')
 
 class Grid:
     """Class to store grid related values that are constant throughout a simulation."""
-    
+
     # initialize all properties
     id: np.ndarray = np.empty(0)
     downstream_id: np.ndarray = np.empty(0)
@@ -62,7 +62,7 @@ class Grid:
     channel_floodplain_width: np.ndarray = np.empty(0)
     total_channel_length: np.ndarray = np.empty(0)
     grid_channel_depth: np.ndarray = np.empty(0)
-    
+
     # Reservoir related properties
     reservoir_id: np.ndarray = np.empty(0)
     reservoir_grid_index: np.ndarray = np.empty(0)
@@ -71,6 +71,7 @@ class Grid:
     reservoir_length: np.ndarray = np.empty(0)
     reservoir_surface_area: np.ndarray = np.empty(0)
     reservoir_storage_capacity: np.ndarray = np.empty(0)
+    reservoir_storage_minimum: np.ndarray = np.empty(0)
     reservoir_depth: np.ndarray = np.empty(0)
     reservoir_use_irrigation: np.ndarray = np.empty(0)
     reservoir_use_electricity: np.ndarray = np.empty(0)
@@ -109,23 +110,23 @@ class Grid:
     reservoir_streamflow_schedule: xr.DataArray = xr.DataArray()
     reservoir_demand_schedule: xr.DataArray = xr.DataArray()
     reservoir_prerelease_schedule: xr.DataArray = xr.DataArray()
-    
+
     def __init__(self, config: Benedict = None, parameters: Parameters = None, empty: bool = False):
         """Initialize the Grid class.
-        
+
         Args:
             config (Benedict): the model configuration
             parameters (Parameters): the model parameters
             empty (bool): if true will return an empty instance
         """
-        
+
         # shortcut to get an empty grid instance
         if empty:
             return
-        
+
         # open dataset
         grid_dataset = open_dataset(config.get('grid.path'))
-    
+
         # create grid from longitude and latitude dimensions
         self.unique_longitudes = np.array(grid_dataset[config.get('grid.longitude')])
         self.unique_latitudes = np.array(grid_dataset[config.get('grid.latitude')])
@@ -138,15 +139,15 @@ class Grid:
         )
         self.longitude = self.longitude.flatten()
         self.latitude = self.latitude.flatten()
-        
+
         for key, value in config.get('grid.variables').items():
             setattr(self, key, np.array(grid_dataset[value]).flatten())
-        
+
         # free memory
         grid_dataset.close()
-        
+
         # use ID and dnID field to calculate masks, upstream, downstream, and outlet indices, as well as count of upstream cells
-    
+
         # ocean/land mask
         # 1 == land
         # 2 == ocean
@@ -161,7 +162,7 @@ class Grid:
                 2
             )
         ).astype(np.int64)
-        
+
         # TODO this is basically the same as the above... should consolidate code to just use one of these masks
         # mosart ocean/land mask
         # 0 == ocean
@@ -181,7 +182,7 @@ class Grid:
                 )
             )
         ).astype(np.int64)
-        
+
         # determine final downstream outlet of each cell
         # this essentially slices up the grid into discrete basins
         # first remap cell ids into cell indices for the (reshaped) 1d grid
@@ -191,8 +192,8 @@ class Grid:
         # convert downstream ids into downstream indices
         self.downstream_id = np.array([id_hashmap[int(i)] if int(i) in id_hashmap else -1 for i in self.downstream_id], dtype=np.int64)
         # update the id to be zero-indexed (note this makes them one less than fortran mosart ids)
-        self.id = np.arange(self.id.size).astype(np.int64)
-        
+        self.id = (self.id - 1).astype(np.int64)  # update the id to be zero-indexed but keeping the id arrangement
+
         # follow each cell downstream to compute outlet id
         size = self.downstream_id.size
         self.outlet_id = np.full(size, -1, dtype=np.int64)
@@ -246,7 +247,7 @@ class Grid:
             ),
             self.local_drainage_area,
         )
-        
+
         # update zero slopes to a small number
         self.hillslope = np.where(
             self.hillslope <= 0,
@@ -386,32 +387,32 @@ class Grid:
 
     def to_files(self, path: str) -> None:
         """Builds a dataframe from all the grid values.
-        
+
         Args:
             path (str): the file path to save the grid zip file to
         """
-        
+
         if not path.endswith('.zip'):
             path += '.zip'
-        
+
         keys = dir(self)
-        
+
         paths = []
         names = []
-        
+
         # handle special cases
         special = ['unique_longitudes', 'unique_latitudes', 'cell_count', 'longitude_spacing', 'latitude_spacing']
         to_pickle = {}
         for key in special:
             keys.remove(key)
             to_pickle[key] = getattr(self, key)
-        
+
         # handle numpy arrrays
         npdf = pd.DataFrame()
         for key in [key for key in keys if isinstance(getattr(self, key), np.ndarray)]:
             if getattr(self, key).size > 0:
                 npdf[key] = getattr(self, key)
-        
+
         # handle dataframes
         dfs = []
         for key in [key for key in keys if isinstance(getattr(self, key), pd.DataFrame)]:
@@ -420,7 +421,7 @@ class Grid:
                     'key': key,
                     'frame': getattr(self, key)
                 })
-        
+
         # handle xarrays
         xrs = []
         for key in [key for key in keys if isinstance(getattr(self, key), xr.DataArray)]:
@@ -429,7 +430,7 @@ class Grid:
                     'key': key,
                     'data_array': getattr(self, key)
                 })
-        
+
         # write them all to files and zip
         with tempfile.TemporaryDirectory() as tmpdir:
             names.append('special.pickle')
@@ -450,7 +451,7 @@ class Grid:
             with ZipFile(path, 'w', compression=ZIP_DEFLATED, compresslevel=9) as zip:
                 for i, filename in enumerate(paths):
                     zip.write(filename, names[i])
-    
+
     @staticmethod
     def from_files(path: Path) -> 'Grid':
         """Creates a Grid instance from columns in a dataframe.
@@ -465,7 +466,7 @@ class Grid:
             path += '.zip'
 
         grid = Grid(empty=True)
-        
+
         with ZipFile(path, 'r') as zip:
             for filename in zip.namelist():
                 with zip.open(filename) as file:
@@ -493,7 +494,7 @@ class Grid:
         if grid.reservoir_dependency_database.size > 0:
             for grid_cell_id, group in grid.reservoir_dependency_database.reset_index().groupby('grid_cell_id'):
                 grid.grid_index_to_reservoirs_map[grid_cell_id] = group.reservoir_id.values
-        
+
         return grid
 
     @staticmethod

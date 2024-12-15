@@ -225,6 +225,7 @@ def update(state: State, grid: Grid, parameters: Parameters, config: Benedict, c
                     grid.reservoir_id,
                     grid.reservoir_surface_area,
                     grid.reservoir_storage_capacity,
+                    grid.reservoir_storage_minimum,
                     state.euler_mask,
                     state.channel_outflow_downstream,
                     state.reservoir_release,
