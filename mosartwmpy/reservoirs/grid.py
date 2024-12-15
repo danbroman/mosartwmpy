@@ -19,14 +19,22 @@ def load_reservoirs(self, config: Benedict, parameters: Parameters) -> None:
     """
 
     # reservoir parameter file
-    reservoirs_file = open_dataset(config.get('water_management.reservoirs.parameters.path'))
+    # reservoirs_file = open_dataset(config.get('water_management.reservoirs.parameters.path'))
+    reservoirs_file = pd.read_parquet(config.get('water_management.reservoirs.parameters.path'))
     reservoirs = pd.DataFrame(index=self.id).merge(
-        reservoirs_file.to_dataframe(),
+        reservoirs_file,
         how='left',
         left_index=True,
         right_on=config.get('water_management.reservoirs.parameters.grid_cell_index'),
     )
-    reservoirs_file.close()
+
+    # reservoirs = pd.DataFrame(index=self.id).merge(
+    #     reservoirs_file.to_dataframe(),
+    #     how='left',
+    #     left_index=True,
+    #     right_on=config.get('water_management.reservoirs.parameters.grid_cell_index'),
+    # )
+    # reservoirs_file.close()
 
     # load reservoir variables
     for key, value in config.get('water_management.reservoirs.parameters.variables').items():
